@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Список задач</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #e9eef6;
+    --surface: #ffffff;
+    --ink: #17203a;
+    --muted: #6b7691;
+    --line: #dde3ef;
+    --accent: #3b4cca;
+    --accent-ink: #ffffff;
+    --done: #98a2b8;
+    --danger: #d23b4e;
+    --shadow: 0 1px 2px rgba(23, 32, 58, .06), 0 12px 32px rgba(23, 32, 58, .08);
+    color-scheme: light;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1424;
+      --surface: #19203a;
+      --ink: #e8ecf8;
+      --muted: #8f9ab8;
+      --line: #2a3354;
+      --accent: #7f8cff;
+      --accent-ink: #0f1424;
+      --done: #66718f;
+      --danger: #ff7686;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 12px 32px rgba(0, 0, 0, .35);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1424;
+    --surface: #19203a;
+    --ink: #e8ecf8;
+    --muted: #8f9ab8;
+    --line: #2a3354;
+    --accent: #7f8cff;
+    --accent-ink: #0f1424;
+    --done: #66718f;
+    --danger: #ff7686;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 12px 32px rgba(0, 0, 0, .35);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Onest", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    display: flex;
+    justify-content: center;
+    padding: 48px 16px;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 560px;
+    background: var(--surface);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    padding: 28px;
+    align-self: flex-start;
+  }
+
+  header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
+  .counter { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+
+  .theme-btn {
+    flex: none;
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .theme-btn:hover { color: var(--ink); border-color: var(--muted); }
+  .theme-btn svg { width: 20px; height: 20px; }
+
+  .add {
+    display: flex; gap: 8px;
+    margin: 24px 0 16px;
+  }
+  .add input {
+    flex: 1; min-width: 0;
+    font: inherit;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid transparent;
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .add input::placeholder { color: var(--muted); }
+  .add input:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+  .add button {
+    font: inherit; font-weight: 600;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: 0;
+    border-radius: 12px;
+    padding: 0 20px;
+    cursor: pointer;
+  }
+  .add button:hover { filter: brightness(1.08); }
+
+  .filters { display: flex; gap: 4px; margin-bottom: 8px; }
+  .filters button {
+    font: inherit; font-size: 14px; font-weight: 500;
+    color: var(--muted);
+    background: transparent;
+    border: 0;
+    border-radius: 999px;
+    padding: 6px 14px;
+    cursor: pointer;
+  }
+  .filters button:hover { color: var(--ink); }
+  .filters button[aria-pressed="true"] { background: var(--bg); color: var(--ink); }
+
+  ul { list-style: none; margin: 0; padding: 0; }
+  li {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  li:last-child { border-bottom: 0; }
+
+  .check {
+    flex: none;
+    appearance: none; -webkit-appearance: none;
+    width: 22px; height: 22px;
+    margin: 0;
+    border: 2px solid var(--muted);
+    border-radius: 7px;
+    cursor: pointer;
+    display: grid; place-items: center;
+    transition: background .15s, border-color .15s;
+  }
+  .check:checked { background: var(--accent); border-color: var(--accent); }
+  .check:checked::after {
+    content: "";
+    width: 5px; height: 10px;
+    border: solid var(--accent-ink);
+    border-width: 0 2px 2px 0;
+    transform: translateY(-1px) rotate(45deg);
+  }
+
+  .text { flex: 1; min-width: 0; overflow-wrap: anywhere; cursor: pointer; }
+  li.done .text { color: var(--done); text-decoration: line-through; }
+
+  .del {
+    flex: none;
+    width: 34px; height: 34px;
+    border: 0; border-radius: 10px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .del:hover { color: var(--danger); background: var(--bg); }
+  .del svg { width: 18px; height: 18px; }
+
+  .empty { text-align: center; color: var(--muted); padding: 28px 0 20px; }
+
+  footer { display: flex; justify-content: flex-end; margin-top: 12px; min-height: 32px; }
+  .clear {
+    font: inherit; font-size: 14px;
+    color: var(--muted);
+    background: transparent; border: 0;
+    padding: 6px 4px;
+    cursor: pointer;
+  }
+  .clear:hover { color: var(--danger); }
+  .clear[hidden] { display: none; }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  @media (max-width: 480px) {
+    body { padding: 20px 12px; }
+    .app { padding: 20px; border-radius: 16px; }
+    h1 { font-size: 24px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>Список задач</h1>
+        <p class="counter" id="counter" aria-live="polite"></p>
+      </div>
+      <button class="theme-btn" id="themeBtn" type="button" aria-label="Сменить тему" title="Сменить тему">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+    </header>
+
+    <div class="add" role="group" aria-label="Новая задача">
+      <input id="input" type="text" placeholder="Что нужно сделать?" maxlength="200" autocomplete="off" aria-label="Текст задачи">
+      <button id="addBtn" type="button">Добавить</button>
+    </div>
+
+    <div class="filters" id="filters" role="group" aria-label="Фильтр задач">
+      <button type="button" data-filter="all" aria-pressed="true">Все</button>
+      <button type="button" data-filter="active" aria-pressed="false">Активные</button>
+      <button type="button" data-filter="done" aria-pressed="false">Выполненные</button>
+    </div>
+
+    <ul id="list"></ul>
+    <p class="empty" id="empty" hidden></p>
+
+    <footer>
+      <button class="clear" id="clearBtn" type="button" hidden>Удалить выполненные</button>
+    </footer>
+  </main>
+
+<script>
+(function () {
+  var STORAGE_KEY = "todo-list-v1";
+  var THEME_KEY = "todo-theme";
+
+  var listEl = document.getElementById("list");
+  var emptyEl = document.getElementById("empty");
+  var counterEl = document.getElementById("counter");
+  var inputEl = document.getElementById("input");
+  var addBtn = document.getElementById("addBtn");
+  var clearBtn = document.getElementById("clearBtn");
+  var filtersEl = document.getElementById("filters");
+  var themeBtn = document.getElementById("themeBtn");
+
+  var tasks = load();
+  var filter = "all";
+
+  /* ---------- хранилище ---------- */
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      var data = raw ? JSON.parse(raw) : [];
+      return Array.isArray(data) ? data : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); } catch (e) {}
+  }
+
+  /* ---------- действия ---------- */
+  function addTask() {
+    var text = inputEl.value.trim();
+    if (!text) { inputEl.focus(); return; }
+    tasks.unshift({ id: Date.now() + Math.random(), text: text, done: false });
+    inputEl.value = "";
+    save();
+    render();
+    inputEl.focus();
+  }
+  function toggleTask(id) {
+    tasks.forEach(function (t) { if (t.id === id) t.done = !t.done; });
+    save();
+    render();
+  }
+  function deleteTask(id) {
+    tasks = tasks.filter(function (t) { return t.id !== id; });
+    save();
+    render();
+  }
+  function clearDone() {
+    tasks = tasks.filter(function (t) { return !t.done; });
+    save();
+    render();
+  }
+
+  /* ---------- отрисовка ---------- */
+  function plural(n, one, few, many) {
+    var m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return one;
+    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+    return many;
+  }
+
+  function render() {
+    var active = tasks.filter(function (t) { return !t.done; }).length;
+    var doneCount = tasks.length - active;
+
+    counterEl.textContent = tasks.length === 0
+      ? "Пока нет задач"
+      : "Осталось " + active + " " + plural(active, "задача", "задачи", "задач") + " из " + tasks.length;
+
+    var visible = tasks.filter(function (t) {
+      if (filter === "active") return !t.done;
+      if (filter === "done") return t.done;
+      return true;
+    });
+
+    listEl.innerHTML = "";
+    visible.forEach(function (t) {
+      var li = document.createElement("li");
+      if (t.done) li.className = "done";
+
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.className = "check";
+      cb.checked = t.done;
+      cb.setAttribute("aria-label", "Выполнено: " + t.text);
+      cb.addEventListener("change", function () { toggleTask(t.id); });
+
+      var span = document.createElement("span");
+      span.className = "text";
+      span.textContent = t.text;
+      span.addEventListener("click", function () { toggleTask(t.id); });
+
+      var del = document.createElement("button");
+      del.type = "button";
+      del.className = "del";
+      del.setAttribute("aria-label", "Удалить задачу: " + t.text);
+      del.title = "Удалить";
+      del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>';
+      del.addEventListener("click", function () { deleteTask(t.id); });
+
+      li.appendChild(cb);
+      li.appendChild(span);
+      li.appendChild(del);
+      listEl.appendChild(li);
+    });
+
+    if (visible.length === 0) {
+      emptyEl.hidden = false;
+      if (tasks.length === 0) emptyEl.textContent = "Список пуст. Введите задачу и нажмите «Добавить».";
+      else if (filter === "active") emptyEl.textContent = "Все задачи выполнены.";
+      else emptyEl.textContent = "Выполненных задач пока нет.";
+    } else {
+      emptyEl.hidden = true;
+    }
+
+    clearBtn.hidden = doneCount === 0;
+
+    Array.prototype.forEach.call(filtersEl.querySelectorAll("button"), function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.filter === filter));
+    });
+  }
+
+  /* ---------- тема ---------- */
+  function applyTheme(theme) {
+    if (theme) document.documentElement.setAttribute("data-theme", theme);
+  }
+  function currentTheme() {
+    var explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit;
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  try { applyTheme(localStorage.getItem(THEME_KEY)); } catch (e) {}
+  themeBtn.addEventListener("click", function () {
+    var next = currentTheme() === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  });
+
+  /* ---------- события ---------- */
+  addBtn.addEventListener("click", addTask);
+  inputEl.addEventListener("keydown", function (e) { if (e.key === "Enter") addTask(); });
+  clearBtn.addEventListener("click", clearDone);
+  filtersEl.addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-filter]");
+    if (!b) return;
+    filter = b.dataset.filter;
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
